@@ -1,14 +1,12 @@
 ---
 name: offload-task
 description: >-
-  Offload work that needs less intelligence than the current model to a cheaper
-  T3 Code subagent, then verify, score, and record the result. Use when the user
-  says "offload" (optionally naming a model and reasoning effort). Also, before
-  each task such as code changes, tests, browser use, research, or audits, ask
-  yourself: "Should I delegate this task, or do it myself?" If the answer is
-  delegate, use this skill. Starting defaults are Sonnet 5.5 on high for code
-  and technical work, and GPT-6.1 Sol on high for research and audits. After
-  that, recorded performance decides the defaults.
+  Delegate a task to one or two T3 Code subagents, verify their work, and score
+  them so later choices improve. Use when the user says "offload" (optionally
+  naming a model and reasoning effort), and proactively whenever delegating
+  would finish the work faster, free you to do something else meanwhile, run
+  pieces in parallel, or hand work needing less intelligence to a cheaper
+  model.
 ---
 
 # Offload task
@@ -32,19 +30,18 @@ If any answer is yes, delegate. When the user says "offload", always delegate.
 ## 2. Pick the agents
 
 Run `python scripts/offload.py next`. Add `--user` when the user named the
-model. It prints a call number and a branch. The script keeps a fixed 3:2
-cycle, so 6 of every 10 calls exploit and 4 explore.
+model. It prints the branch. The script keeps a fixed 3:2 cycle, so 6 of every
+10 calls exploit and 4 explore.
 
 - **user**: use the model the user named. If they gave no effort, use high.
-- **exploit**: pick one agent yourself. Run
-  `python scripts/offload.py history --grep <word>` to see how each model and
-  effort scored on similar tasks, and choose the best fit. Match the agent to
-  the intelligence the task needs: running tests or parsing logs needs little,
-  debugging or browser use needs more. With no similar history, start with
+- **exploit**: run `python scripts/offload.py history` to see each model and
+  effort's average scores and review. Pick the one that best fits the
+  intelligence this task needs. Running tests or parsing logs needs little;
+  debugging or browser use needs more. With no history yet, start with
   Sonnet 5.5 on high for code and technical work, or GPT-6.1 Sol on high for
   research and audits.
-- **explore**: the script names two agents (model and effort) from different
-  providers, favoring the least tried. Run both on the same task at the same
+- **explore**: the script names two models from different providers at the
+  same effort, favoring the least tried. Run both on the same task at the same
   time, then use the better result.
 
 To change the explore pool, edit `MODELS` and `EFFORTS` in the script.
@@ -81,8 +78,7 @@ To change the explore pool, edit `MODELS` and `EFFORTS` in the script.
 
 ## 5. Score and record
 
-Score each child run from 0 to 5 on every dimension. The scores are stored
-separately, in this order:
+Score each child run from 0 to 5 on every dimension, in this order:
 
 1. **Correctness**: the result is right.
 2. **Completeness**: every acceptance criterion is met.
@@ -92,15 +88,22 @@ separately, in this order:
 6. **Efficiency**: it finished quickly, without wasted steps.
 7. **Independence**: it needed no follow-up or rework from you.
 
-Add a one-line review naming what the run did well and what it did badly. Then
-record every run, failures included:
+Each model and effort keeps one review. Run `history` and read the agent's
+current review, if it has one. Then write an updated review of about 4 to 6
+sentences. Merge what you knew before with what this run showed: the kinds of
+task it handled well, where it struggled, and when to choose it. Then record:
 
 ```sh
-python scripts/offload.py record --call <number> --task "<one-line task description>" \
-  --run <model> <effort> <s1,s2,s3,s4,s5,s6,s7> "<review>" \
-  [--run <model> <effort> <s1,...,s7> "<review>"]
+python scripts/offload.py record <model> <effort> <s1,s2,s3,s4,s5,s6,s7> "<updated review>"
 ```
 
-Use `-` in place of the scores for a run that was cancelled or blocked by
-infrastructure. The script appends one row per run to `history.csv` in this
-skill's folder. Do not edit that file by hand.
+The script adds the agent if it is new. Otherwise it folds the scores into the
+agent's averages and replaces the review. Record each explore run separately.
+Do not record a run that infrastructure blocked; it says nothing about the
+model.
+
+The data lives outside this skill, in `~/.local/share/offload-task/`
+(`$XDG_DATA_HOME/offload-task` if set, or `$OFFLOAD_DATA` to override), so
+reinstalling or updating the skill keeps it. `state.json` holds the call
+counters. `history.csv` holds one row per model and effort. Do not edit either
+file by hand.

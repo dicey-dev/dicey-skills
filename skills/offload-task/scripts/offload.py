@@ -1,27 +1,27 @@
 #!/usr/bin/env python3
-"""Keep the offload-task skill's 3:2 exploit/explore ratio and its run history.
+"""Keep the offload-task skill's 3:2 exploit/explore ratio and per-agent scores.
 
-  offload.py next [--user]      # start a call: prints its number, branch, and agents
-  offload.py record --call 7 --task "Run the unit tests and report failures" \
-      --run sonnet-5.5 high 5,4,5,4,4,3,5 "All failures found; slow to finish" \
-      --run gpt-6.1-sol medium 3,3,4,2,4,5,2 "Missed two failures; no logs cited"
-  offload.py history [--grep tests]
+  offload.py next [--user]   # count a call; print its branch (and agents on explore)
+  offload.py history         # print every agent's average scores and review
+  offload.py record sonnet-5.5 high 5,4,5,4,4,3,5 "<updated review>"
 
-Data lives next to SKILL.md (override the folder with OFFLOAD_DATA):
-state.json holds the call counters, history.csv holds one row per child run.
+Data lives in $OFFLOAD_DATA, else $XDG_DATA_HOME/offload-task, else
+~/.local/share/offload-task. state.json holds the call counters. history.csv
+holds one row per model and effort: run count, average scores, and a review.
 """
 import argparse
 import csv
 import fcntl
+import io
 import json
 import os
 import random
 import sys
 from contextlib import contextmanager
-from datetime import datetime, timezone
 from pathlib import Path
 
-DATA = Path(os.environ.get("OFFLOAD_DATA", Path(__file__).resolve().parent.parent))
+DATA = Path(os.environ.get("OFFLOAD_DATA") or Path(
+    os.environ.get("XDG_DATA_HOME") or Path.home() / ".local/share") / "offload-task")
 STATE = DATA / "state.json"
 HISTORY = DATA / "history.csv"
 
@@ -35,11 +35,12 @@ EFFORTS = ["medium", "high"]
 CYCLE = ["exploit", "explore", "exploit", "explore", "exploit"]  # 3:2
 SCORES = ["correctness", "completeness", "adherence", "evidence", "clarity",
           "efficiency", "independence"]  # each 0-5, in this order
-COLUMNS = ["date", "call", "branch", "task", "model", "effort", *SCORES, "review"]
+COLUMNS = ["model", "effort", "runs", *SCORES, "review"]
 
 
 @contextmanager
 def locked():
+    DATA.mkdir(parents=True, exist_ok=True)
     fd = os.open(DATA, os.O_RDONLY)  # lock the folder; no lock file left behind
     try:
         fcntl.flock(fd, fcntl.LOCK_EX)
@@ -48,37 +49,45 @@ def locked():
         os.close(fd)
 
 
+def write_atomic(path, text):
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(text)
+    tmp.replace(path)
+
+
 def load_state():
-    if not STATE.exists():
-        return {"calls": 0, "decisions": 0, "pending": {}}
-    return json.loads(STATE.read_text())
-
-
-def save_state(state):
-    tmp = STATE.with_suffix(".tmp")
-    tmp.write_text(json.dumps(state, indent=2) + "\n")
-    tmp.replace(STATE)
+    return json.loads(STATE.read_text()) if STATE.exists() else {"calls": 0, "decisions": 0}
 
 
 def load_history():
     if not HISTORY.exists():
-        return []
+        return {}
     with open(HISTORY, newline="") as f:
-        return list(csv.DictReader(f))
+        return {(r["model"], r["effort"]): r for r in csv.DictReader(f)}
+
+
+def save_history(rows):
+    buf = io.StringIO()
+    writer = csv.writer(buf, lineterminator="\n")
+    writer.writerow(COLUMNS)
+    writer.writerows([rows[key][c] for c in COLUMNS] for key in sorted(rows))
+    write_atomic(HISTORY, buf.getvalue())
 
 
 def explore_agents():
-    """One least-tried model + effort from each of two different providers."""
-    tried = {}
-    for row in load_history():
-        key = (row["model"], row["effort"])
-        tried[key] = tried.get(key, 0) + 1
-    picks = []
-    for models in MODELS.values():
-        options = [(m, e) for m in models for e in EFFORTS]
-        fewest = min(tried.get(o, 0) for o in options)
-        picks.append(random.choice([o for o in options if tried.get(o, 0) == fewest]))
-    return [{"model": m, "effort": e} for m, e in random.sample(picks, 2)]
+    """Two models from different providers at the same effort, least tried first."""
+    runs = {k: int(r["runs"]) for k, r in load_history().items()}
+    options = []
+    for effort in EFFORTS:
+        picks = []
+        for models in MODELS.values():
+            fewest = min(runs.get((m, effort), 0) for m in models)
+            picks.append(random.choice(
+                [m for m in models if runs.get((m, effort), 0) == fewest]))
+        tried = sum(runs.get((m, effort), 0) for m in picks)
+        options.append((tried, random.random(), effort, random.sample(picks, 2)))
+    _, _, effort, models = min(options)
+    return [{"model": m, "effort": effort} for m in models]
 
 
 def cmd_next(args):
@@ -90,78 +99,49 @@ def cmd_next(args):
         else:
             branch = CYCLE[state["decisions"] % len(CYCLE)]
             state["decisions"] += 1
-        out = {"call": state["calls"], "branch": branch}
-        if branch == "explore":
-            out["agents"] = explore_agents()
-        state["pending"][str(state["calls"])] = branch
-        save_state(state)
+        write_atomic(STATE, json.dumps(state, indent=2) + "\n")
+    out = {"call": state["calls"], "branch": branch}
+    if branch == "explore":
+        out["agents"] = explore_agents()
     print(json.dumps(out, indent=2))
 
 
-def parse_scores(raw):
-    if raw == "-":
-        return [""] * len(SCORES)
-    values = [int(v) for v in raw.split(",")]
-    if len(values) != len(SCORES) or not all(0 <= v <= 5 for v in values):
-        raise ValueError
-    return values
+def cmd_history(_args):
+    state = load_state()
+    print(f"calls: {state['calls']}, next branch: "
+          f"{CYCLE[state['decisions'] % len(CYCLE)]}, data: {DATA}")
+    rows = load_history()
+    if not rows:
+        print("no runs recorded yet")
+        return
+    for (model, effort), r in sorted(rows.items()):
+        scores = ", ".join(f"{s} {float(r[s]):.1f}" for s in SCORES)
+        print(f"\n{model} / {effort} ({r['runs']} runs)\n  {scores}\n  {r['review']}")
 
 
 def cmd_record(args):
     try:
-        runs = [(m, e, parse_scores(s), review.strip()) for m, e, s, review in args.run]
+        scores = [int(v) for v in args.scores.split(",")]
+        if len(scores) != len(SCORES) or not all(0 <= v <= 5 for v in scores):
+            raise ValueError
     except ValueError:
-        sys.exit(f"error: scores must be {len(SCORES)} integers 0-5 in the order "
-                 f"{','.join(SCORES)}, or '-' if the run could not be scored")
+        sys.exit(f"error: scores must be {len(SCORES)} integers 0-5, in the order "
+                 + ",".join(SCORES))
+    review = " ".join(args.review.split())
+    if not review:
+        sys.exit("error: the review cannot be empty")
     with locked():
-        state = load_state()
-        branch = state["pending"].get(str(args.call))
-        if branch is None:
-            sys.exit(f"error: call {args.call} is not open; run 'next' first")
-        if branch == "explore" and len(runs) != 2:
-            sys.exit("error: an explore call needs exactly two --run entries")
-        date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-        new_file = not HISTORY.exists()
-        with open(HISTORY, "a", newline="") as f:
-            writer = csv.writer(f)
-            if new_file:
-                writer.writerow(COLUMNS)
-            for model, effort, scores, review in runs:
-                writer.writerow([date, args.call, branch, args.task.strip(), model,
-                                 effort, *scores, review])
-        del state["pending"][str(args.call)]
-        save_state(state)
-    print(f"recorded call {args.call} ({branch}): {len(runs)} run(s)")
-
-
-def cmd_history(args):
-    state = load_state()
-    done = state["decisions"]
-    print(f"calls: {state['calls']}, next branch: {CYCLE[done % len(CYCLE)]}")
-    rows = load_history()
-    if args.grep:
-        needle = args.grep.lower()
-        rows = [r for r in rows if needle in (r["task"] + " " + r["review"]).lower()]
-    if not rows:
-        print("no matching runs recorded")
-        return
-
-    agents = {}
-    for r in rows:
-        if r[SCORES[0]] != "":
-            agents.setdefault(f"{r['model']}/{r['effort']}", []).append(r)
-    if agents:
-        short = [s[:5] for s in SCORES]
-        print(f"\n{'average scores (0-5)':<24}{'runs':>5} " + " ".join(f"{s:>5}" for s in short))
-    for agent, scored in sorted(agents.items()):
-        means = [sum(int(r[s]) for r in scored) / len(scored) for s in SCORES]
-        print(f"{agent:<24}{len(scored):>5} " + " ".join(f"{m:>5.1f}" for m in means))
-
-    print("\nruns")
-    for r in rows:
-        scores = ",".join(r[s] for s in SCORES) if r[SCORES[0]] != "" else "unscored"
-        print(f"{r['date']} #{r['call']} {r['branch']} {r['model']}/{r['effort']} "
-              f"[{scores}] {r['task']} -- {r['review']}")
+        rows = load_history()
+        key = (args.model, args.effort)
+        old = rows.get(key)
+        n = int(old["runs"]) if old else 0
+        row = {"model": args.model, "effort": args.effort, "runs": n + 1, "review": review}
+        for s, v in zip(SCORES, scores):
+            prev = float(old[s]) if old else 0.0
+            row[s] = f"{(prev * n + v) / (n + 1):.2f}"
+        rows[key] = row
+        save_history(rows)
+    print(f"{'updated' if old else 'added'} {args.model} / {args.effort}: {n + 1} runs")
 
 
 def main():
@@ -169,20 +149,19 @@ def main():
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="cmd", required=True)
 
-    nxt = sub.add_parser("next", help="start a call and get its branch")
+    nxt = sub.add_parser("next", help="count a call and get its branch")
     nxt.add_argument("--user", action="store_true", help="the user named the model")
     nxt.set_defaults(func=cmd_next)
 
-    rec = sub.add_parser("record", help="save scored runs once the call is finished")
-    rec.add_argument("--call", type=int, required=True, help="number printed by 'next'")
-    rec.add_argument("--task", required=True, help="one line describing the task")
-    rec.add_argument("--run", nargs=4, action="append", required=True,
-                     metavar=("MODEL", "EFFORT", "SCORES", "REVIEW"))
-    rec.set_defaults(func=cmd_record)
+    sub.add_parser("history", help="print every agent's scores and review").set_defaults(
+        func=cmd_history)
 
-    hist = sub.add_parser("history", help="show average scores and past runs")
-    hist.add_argument("--grep", help="only runs whose task or review contains this text")
-    hist.set_defaults(func=cmd_history)
+    rec = sub.add_parser("record", help="add a scored run to an agent's averages")
+    rec.add_argument("model")
+    rec.add_argument("effort")
+    rec.add_argument("scores", help=",".join(SCORES) + " (each 0-5)")
+    rec.add_argument("review", help="the agent's full updated review")
+    rec.set_defaults(func=cmd_record)
 
     args = parser.parse_args()
     args.func(args)
