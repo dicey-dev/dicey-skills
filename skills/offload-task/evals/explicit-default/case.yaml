@@ -1,7 +1,0 @@
-schema_version: "1.1"
-name: explicit-default
-expected_outcome: |
-  Select GPT-6.1 Sol/high using variant, exclude unrelated inherited options
-  or report a configuration blocker if the harness cannot clear them,
-  bound the test task, and reject an unsupported success claim. Record
-  unverified execution and an unscored result rather than inventing evidence.

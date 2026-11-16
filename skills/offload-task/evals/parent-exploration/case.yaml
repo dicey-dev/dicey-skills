@@ -1,6 +1,0 @@
-schema_version: "1.1"
-name: parent-exploration
-expected_outcome: |
-  The eleventh eligible decision explores B/medium once; retries and explicit
-  user choices do not advance the ratio. Preserve failures and unknown metrics.
-  An unavailable explicit model blocks dispatch rather than being substituted.

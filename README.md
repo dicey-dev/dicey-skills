@@ -18,26 +18,3 @@ Harness-bundled skills that are not locally installed (such as OpenCode's
 
 This repository is a snapshot, not an installer or live sync. Changes here do
 not change the installed skills. Preserve upstream license notices when sharing.
-
-## Offload task (new skill)
-
-`skills/offload-task/SKILL.md` describes bounded T3 Code delegation, defaulting
-explicit requests to GPT-6.1 Sol/high and allowing parent-selected model/effort
-for token-intensive execution. The parent verifies and scores outcomes and
-updates the initially empty history; no automatic harness integration is implied.
-Parent-selected, safe exploration uses about one trial per ten exploitation
-decisions. This new skill is not included in the installed-snapshot inventory.
-
-Validate the new skill and unchanged snapshot:
-
-```sh
-python -m unittest discover -s tests -v
-python skills/skill-creator/scripts/quick_validate.py skills/offload-task
-```
-
-Two dry-run behavior cases and their graders live in `skills/offload-task/evals`.
-They test planning, not live execution or guaranteed token savings. Local paired
-runs passed 4/4 assertions with the skill and 2/4 without it (one run per case;
-manually graded). Usage/timing were not exposed. No performance records were
-seeded from these simulations. Results are in the ignored
-`skills/offload-task-workspace/iteration-1/` directory.
