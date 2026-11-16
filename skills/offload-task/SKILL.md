@@ -3,12 +3,12 @@ name: offload-task
 description: >-
   Offload work that needs less intelligence than the current model to a cheaper
   T3 Code subagent, then verify, score, and record the result. Use when the user
-  says "offload" (optionally naming a model and reasoning effort), and
-  proactively whenever the parent agent (e.g. Opus) has a task a lighter model
-  can handle, such as code changes, tests, browser use, research, or audits.
-  Starting defaults are Sonnet 5.5 on high for code and technical work, and
-  GPT-6.1 Sol on high for research and audits. After that, recorded
-  performance decides the defaults.
+  says "offload" (optionally naming a model and reasoning effort). Also, before
+  each task such as code changes, tests, browser use, research, or audits, ask
+  yourself: "Should I delegate this task, or do it myself?" If the answer is
+  delegate, use this skill. Starting defaults are Sonnet 5.5 on high for code
+  and technical work, and GPT-6.1 Sol on high for research and audits. After
+  that, recorded performance decides the defaults.
 ---
 
 # Offload task
