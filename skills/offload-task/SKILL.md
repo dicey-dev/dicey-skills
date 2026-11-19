@@ -40,7 +40,7 @@ performs. You plan, decide, verify, and report. The children execute.
    - **user**: use the model the user named. If they gave no effort, use high.
    - **exploit**: run `python scripts/offload.py history` and pick the agent
      whose review best fits this piece. With no history yet, use Sonnet 5.5 on
-     high for code and technical work, or GPT-6.1 Sol on high for research and
+     high for code and technical work, or GPT-6.2 Sol on high for research and
      audits.
    - **explore**: the script names two models from different providers at the
      same effort. Run both on the same piece, from the same starting state.
