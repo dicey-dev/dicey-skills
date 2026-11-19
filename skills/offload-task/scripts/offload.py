@@ -29,7 +29,7 @@ HISTORY = DATA / "history.csv"
 # orchestrator_capabilities. Edit these lists to change the pool.
 MODELS = {
     "anthropic": ["opus-5.5", "sonnet-5.5", "haiku-5.5"],
-    "openai": ["gpt-6.1-sol", "gpt-6.1-terra"],
+    "openai": ["gpt-6.2-sol", "gpt-6.2-terra"],
 }
 EFFORTS = ["medium", "high"]
 CYCLE = ["exploit", "explore", "exploit", "explore", "exploit"]  # 3:2
