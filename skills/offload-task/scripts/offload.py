@@ -30,6 +30,7 @@ HISTORY = DATA / "history.csv"
 MODELS = {
     "anthropic": ["opus-5.5", "sonnet-5.5", "haiku-5.5"],
     "openai": ["gpt-6.2-sol", "gpt-6.2-terra"],
+    "google": ["gemini-4-neon"],
 }
 EFFORTS = ["medium", "high"]
 CYCLE = ["exploit", "explore", "exploit", "explore", "exploit"]  # 3:2
@@ -82,10 +83,14 @@ def explore_agents():
         picks = []
         for models in MODELS.values():
             fewest = min(runs.get((m, effort), 0) for m in models)
-            picks.append(random.choice(
-                [m for m in models if runs.get((m, effort), 0) == fewest]))
-        tried = sum(runs.get((m, effort), 0) for m in picks)
-        options.append((tried, random.random(), effort, random.sample(picks, 2)))
+            model = random.choice(
+                [m for m in models if runs.get((m, effort), 0) == fewest])
+            picks.append((fewest, random.random(), model))
+        picks.sort()
+        chosen = picks[:2]
+        tried = sum(count for count, _, _ in chosen)
+        pair = [model for _, _, model in chosen]
+        options.append((tried, random.random(), effort, random.sample(pair, 2)))
     _, _, effort, models = min(options)
     return [{"model": m, "effort": effort} for m in models]
 
