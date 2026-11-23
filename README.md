@@ -18,3 +18,12 @@ Harness-bundled skills that are not locally installed (such as OpenCode's
 
 This repository is a snapshot, not an installer or live sync. Changes here do
 not change the installed skills. Preserve upstream license notices when sharing.
+
+## Third-party skills
+
+These skills come from [tstack](https://github.com/t3dotgg/tstack) by Theo
+Browne, under the MIT License: `babysit-pr`, `council`, `file-pr`,
+`full-send`, `full-stop`, `leaving-pr-comments`, `modernize`, `sol-loop`, and
+`takeover`. They match upstream commit
+[`11e37a7`](https://github.com/t3dotgg/tstack/commit/11e37a7). Each skill
+folder includes the upstream `LICENSE` with its copyright notice.
