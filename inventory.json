@@ -76,32 +76,6 @@
         "LICENSE": "8095f9a9f97d074131f6a2ce09b952d12c18b36f09f4e5df0517c4e64e82c851"
       }
     },
-    "openai-quota-report": {
-      "sources": [
-        "/home/divy/.config/opencode/skills/openai-quota-report"
-      ],
-      "files": {
-        "SKILL.md": "a5929f258a35ee757d51ba9764cf8d7cb297bef862d0d402b855cf92b6d0430b",
-        "scripts/usage.py": "2a725ce550cdf323dd363e7855e9522651a03a318cda9cc39b97c4049ac41a12"
-      }
-    },
-    "openai-quota-reset-once": {
-      "sources": [
-        "/home/divy/.config/opencode/skills/openai-quota-reset-once"
-      ],
-      "files": {
-        "SKILL.md": "9e58a1577950855f0d89bc75accb50e7728c217186175de3b5485e43396ab008"
-      }
-    },
-    "openai-quota-reset-report": {
-      "sources": [
-        "/home/divy/.config/opencode/skills/openai-quota-reset-report"
-      ],
-      "files": {
-        "SKILL.md": "7a1930280ecdde1e572a4a80ddfbf7f62af05b2be3c80166439b00274e9d8f08",
-        "scripts/resets.py": "9ce039470addd45d27ca6c2aa535162053b3a2ec9647e9f421a32b183fe0f89d"
-      }
-    },
     "sol-loop": {
       "sources": [
         "/home/divy/.config/opencode/skills/sol-loop",
@@ -122,16 +96,6 @@
         "LICENSE": "8095f9a9f97d074131f6a2ce09b952d12c18b36f09f4e5df0517c4e64e82c851"
       }
     },
-    "diagnose-crash": {
-      "sources": [
-        "/home/divy/.agents/skills/diagnose-crash",
-        "/home/divy/.claude/skills/diagnose-crash"
-      ],
-      "files": {
-        "SKILL.md": "0762bb8c913a9026a143ee7213caebe334654efeb0d37949aa05ddd1e2639072",
-        "reporting.md": "00f304bd6b2a55252f16f3b2c1e0881317c19722e6bbd5f956fc2114bedb442a"
-      }
-    },
     "frontend-design": {
       "sources": [
         "/home/divy/.agents/skills/frontend-design"
@@ -144,31 +108,6 @@
         "assets/vanilla-starter/style.css": "376fe84d96ac39047200bf9b8d4a3f9b85a7e51e7ca1e3974a84d4c65849eae5",
         "references/aesthetic-playbook.md": "c46fe375a908738f473095b5968e8be40685aa48303dca82838b8c675d418f88",
         "references/implementation-patterns.md": "c9ea6ce54bbf83a9cd3452c5b353cfd8ebf011ddd80bee22581e7dcccf9442f9"
-      }
-    },
-    "omarchy": {
-      "sources": [
-        "/home/divy/.agents/skills/omarchy",
-        "/home/divy/.claude/skills/omarchy"
-      ],
-      "files": {
-        "SKILL.md": "16de6188d673b9e1c01fe69d1df9e787b09915e61153d5afeecb4a715aebe026",
-        "capture.md": "8f4752ce04c653c4483ab8e6d980ba504189595bb5c8348fb2ae996b47154f0b",
-        "contributing.md": "d0f8cf1582bc723cdfcec75413ead37c12080de15aba4f7d5a441182d368591f",
-        "hooks.md": "19f5071daccbd21f42446b865b9ce630f9469172c8d3fc51d706db76faaa3182",
-        "hyprland.md": "43eeca567220c5be9f277884aad06dc994c96494146e03a52d9a68111c44d5d2",
-        "plugins.md": "b751dd2917e82bfbd057004d5473fe6ede2b92bae2a6a108ff1f9c3da0ff3172",
-        "theming.md": "2122773366e589c36ddd9a4b74b9bb96da96190b5f1434197e0a1ffad0942d36"
-      }
-    },
-    "omarchy-app": {
-      "sources": [
-        "/home/divy/.agents/skills/omarchy-app",
-        "/home/divy/.claude/skills/omarchy-app"
-      ],
-      "files": {
-        "SKILL.md": "640095363af9ac62e2991b988163d7e67500c963f03f9546b54148ee0cd8d15c",
-        "templates.md": "9e46554783a9af765093f37b31e85464d79d067453607f013b93c0eeae730ac6"
       }
     },
     "docx": {

@@ -2,12 +2,25 @@
 
 Versioned copies of the locally installed skills available to T3 Code.
 
+## Quick start
+
+Clone the repo somewhere permanent and run the installer:
+
+```sh
+git clone https://github.com/dicey-dev/dicey-skills.git ~/dicey-skills && ~/dicey-skills/install.sh
+```
+
+Already cloned? Run `./install.sh` from the repo. Then start a new session in
+each harness to load the skills.
+
 ## Installed-skill snapshot
 
 The initial `main` commit contains 21 skills under `skills/`, including their
 scripts, references, assets, and bundled license files. Identical copies from
 multiple skill directories are deduplicated. `inventory.json` records source
-paths and SHA-256 hashes for every copied file.
+paths and SHA-256 hashes for every copied file. The Omarchy skills
+(`diagnose-crash`, `omarchy`, `omarchy-app`) and the `openai-quota-*` skills
+were later removed. Omarchy ships its own copies of its skills.
 
 Sources: `~/.config/opencode/skills`, `~/.agents/skills`, `~/.claude/skills`,
 and the Apache-licensed packages under `~/.claude/skills/synced`. Synced
@@ -16,34 +29,35 @@ are copied as real files. Temporary staging files and Python caches are excluded
 Harness-bundled skills that are not locally installed (such as OpenCode's
 `browser`, `opencode`, and `report`) are not part of this snapshot.
 
-This repository has no installer. To use a skill from here, symlink its folder
-into a harness's skills directory; edits here then take effect there right away.
-Copying a folder instead gives a snapshot that does not update. Preserve
-upstream license notices when sharing.
+## How install.sh works
 
-## Installing in Antigravity
+`install.sh` symlinks every skill folder that has a `SKILL.md` into the skills
+folder of each harness it finds. It skips harnesses that are not installed,
+and it never replaces an existing entry. Re-running it is safe. Because the
+skills are links, edits in this repo take effect right away, so keep the clone
+where it is. Preserve upstream license notices when sharing.
 
-The Antigravity CLI (`agy`) loads user skills from `~/.gemini/config/skills`.
-Link every skill from this repository there:
+| Harness | Detected by | Skills folder |
+| --- | --- | --- |
+| Claude Code | `~/.claude` | `~/.claude/skills` |
+| OpenCode | `~/.config/opencode` | `~/.config/opencode/skills` |
+| Codex | `~/.codex` (`$CODEX_HOME`) | `~/.codex/skills` |
+| Pi | `~/.pi/agent` | `~/.pi/agent/skills` |
+| Antigravity CLI | `~/.gemini/antigravity-cli` | `~/.gemini/config/skills` |
+| Gemini CLI | `~/.gemini/settings.json` | `~/.gemini/skills` |
+| Grok | `~/.grok` | `~/.grok/skills` |
+| Cursor | `~/.cursor` | `~/.cursor/skills` |
+| Kiro | `~/.kiro` (`$KIRO_HOME`) | `~/.kiro/skills` |
+| Copilot CLI | `~/.copilot` | `~/.copilot/skills` |
 
-```sh
-cd /path/to/dicey-skills
-mkdir -p ~/.gemini/config/skills
-for d in skills/*/; do
-  [ -f "$d/SKILL.md" ] || continue           # skips *-workspace folders
-  s=$(basename "$d")
-  [ -e ~/.gemini/config/skills/"$s" ] || ln -s "$PWD/skills/$s" ~/.gemini/config/skills/"$s"
-done
-```
+Notes:
 
-The loop leaves existing entries alone. `diagnose-crash`, `omarchy` and
-`omarchy-app` are usually already linked to
-`/usr/share/omarchy/default/agents/skills`, which Omarchy updates. Keep those
-links. Start a new `agy` session to load the skills, then check with
-`agy -p "list your skills"`.
-
-The same symlink setup works for other harnesses: Claude Code uses
-`~/.claude/skills`, and harnesses that share skills use `~/.agents/skills`.
+- Claude Code may already have `docx`, `pdf`, `pptx`, `xlsx` and
+  `skill-creator` from claude.ai sync. If they show up twice, delete the links
+  from `~/.claude/skills`.
+- Kiro custom agents load skills only when their `resources` include
+  `skill://~/.kiro/skills/*/SKILL.md`. The default agent loads them on its own.
+- To add a harness, add a line to the `harnesses` list in `install.sh`.
 
 ## Third-party skills
 
