@@ -28,6 +28,7 @@ Link every skill from this repository there:
 
 ```sh
 cd /path/to/dicey-skills
+mkdir -p ~/.gemini/config/skills
 for d in skills/*/; do
   [ -f "$d/SKILL.md" ] || continue           # skips *-workspace folders
   s=$(basename "$d")
