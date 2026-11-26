@@ -45,8 +45,8 @@ each harness to load the skills.
 ## How install.sh works
 
 `install.sh` symlinks every skill folder that has a `SKILL.md` into the skills
-folder of each harness it finds. A harness counts as installed when its config
-folder exists. Commands on `PATH` are not used, because tool managers such as
+folder of each harness it finds. A harness counts as installed when the path in
+the "Detected by" column exists. Commands on `PATH` are not used, because tool managers such as
 mise can add commands for tools that were never downloaded. The script skips
 harnesses that are not installed and never replaces an existing entry, so
 re-running it is safe. Because the skills are links, keep the clone where it is.
@@ -54,7 +54,7 @@ re-running it is safe. Because the skills are links, keep the clone where it is.
 | Harness | Detected by | Skills folder |
 | --- | --- | --- |
 | Claude Code | `~/.claude` | `~/.claude/skills` |
-| OpenCode | `~/.config/opencode` | `~/.config/opencode/skills` |
+| OpenCode | `~/.config/opencode` (`$XDG_CONFIG_HOME`) | `~/.config/opencode/skills` |
 | Codex | `~/.codex` (`$CODEX_HOME`) | `~/.codex/skills` |
 | Pi | `~/.pi/agent` | `~/.pi/agent/skills` |
 | Antigravity CLI | `~/.gemini/antigravity-cli` | `~/.gemini/config/skills` |
@@ -101,5 +101,5 @@ The tstack skills come from [tstack](https://github.com/t3dotgg/tstack) by
 Theo Browne, under the MIT License, and match upstream commit
 [`11e37a7`](https://github.com/t3dotgg/tstack/commit/11e37a7). `frontend-design`
 is MIT-licensed by Vipul Gupta. The Anthropic skills are under the Apache
-License 2.0. Each skill folder includes its upstream license file. Keep those
+License 2.0. Each copied third-party skill folder includes its upstream license file. Keep those
 notices when sharing.
