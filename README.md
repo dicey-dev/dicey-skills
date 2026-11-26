@@ -18,7 +18,9 @@ each harness to load the skills.
 The initial `main` commit contains 21 skills under `skills/`, including their
 scripts, references, assets, and bundled license files. Identical copies from
 multiple skill directories are deduplicated. `inventory.json` records source
-paths and SHA-256 hashes for every copied file.
+paths and SHA-256 hashes for every copied file. The Omarchy skills
+(`diagnose-crash`, `omarchy`, `omarchy-app`) and the `openai-quota-*` skills
+were later removed. Omarchy ships its own copies of its skills.
 
 Sources: `~/.config/opencode/skills`, `~/.agents/skills`, `~/.claude/skills`,
 and the Apache-licensed packages under `~/.claude/skills/synced`. Synced
@@ -50,9 +52,6 @@ where it is. Preserve upstream license notices when sharing.
 
 Notes:
 
-- `diagnose-crash`, `omarchy` and `omarchy-app` are usually already linked to
-  `/usr/share/omarchy/default/agents/skills`, which Omarchy keeps updated. The
-  installer keeps those links.
 - Claude Code may already have `docx`, `pdf`, `pptx`, `xlsx` and
   `skill-creator` from claude.ai sync. If they show up twice, delete the links
   from `~/.claude/skills`.
